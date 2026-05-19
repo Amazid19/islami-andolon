@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>হাতপাখা লোগো পাজল গেম</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            color: #006643;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        p {
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        /* পাজল বোর্ডের ডিজাইন */
+        #puzzle-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border: 5px solid #006643;
+            border-radius: 8px;
+            background-color: #ddd;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        /* প্রতিটি টাইল বা টুকরোর ডিজাইন */
+        .tile {
+            background-image: url('https://wikimedia.org'); /* এখানে আপনার লোগোর ইমেজ লিংক বসাতে পারেন */
+            background-size: 300px 300px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* লোগোর ব্যাকগ্রাউন্ড ইমেজ হিসেবে একটি হাতপাখা বা লোগো রিপ্রেজেন্টেশন ব্যাকগ্রাউন্ড */
+        .tile {
+            /* টেস্ট করার সুবিধার্থে আমরা হাতপাখার লোগোর রঙের একটি প্রতীকী ব্যাকগ্রাউন্ড ব্যবহার করছি */
+            background: #ffffff;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #006643;
+        }
+
+        .empty {
+            background: transparent !important;
+            border: none !important;
+            cursor: default;
+        }
+
+        /* রিস্টার্ট বাটন */
+        #shuffle-btn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background-color: #006643;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        #shuffle-btn:hover {
+            background-color: #004d32;
+        }
+
+        #win-message {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #28a745;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>হাতপাখা লোগো পাজল গেম</h1>
+    <p>টুকরো গুলোতে ক্লিক করে লোগোটি সঠিকভাবে সাজান (১ থেকে ৮ ক্রমানুসারে)।</p>
+
+    <div id="puzzle-container"></div>
+    
+    <button id="shuffle-btn" onclick="shuffleTiles()">নতুন করে শুরু করুন</button>
+    <div id="win-message">অভিনন্দন! আপনি পাজলটি মিলাতে পেরেছেন।</div>
+
+    <script>
+        const container = document.getElementById('puzzle-container');
+        const winMessage = document.getElementById('win-message');
+        
+        // সঠিক পজিশন (১ থেকে ৮ এবং শেষটি খালি)
+        let tilesOrder = [1, 2, 3, 4, 5, 6, 7, 8, ""];
+        let currentOrder = [...tilesOrder];
+
+        // গেম বোর্ড তৈরি করা
+        function renderPuzzle() {
+            container.innerHTML = "";
+            currentOrder.forEach((tile, index) => {
+                const tileElement = document.createElement('div');
+                tileElement.classList.add('tile');
+                
+                if (tile === "") {
+                    tileElement.classList.add('empty');
+                } else {
+                    tileElement.innerText = tile;
+                    // এখানে চাইলে ব্যাকগ্রাউন্ড পজিশন দিয়ে ইমেজ টুকরো করা যায়
+                    // tileElement.style.backgroundPosition = getBgPos(tile);
+                }
+
+                tileElement.addEventListener('click', () => moveTile(index));
+                container.appendChild(tileElement);
+            });
+            checkWin();
+        }
+
+        // টাইল সরানোর লজিক
+        function moveTile(index) {
+            const emptyIndex = currentOrder.indexOf("");
+            const validMoves = [index - 1, index + 1, index - 3, index + 3];
+
+            // শুধু পাশাপাশি বা উপরে-নিচে খালি জায়গা থাকলে নড়বে
+            if (validMoves.includes(emptyIndex)) {
+                // বর্ডার ক্রস চেকিং (রো ব্রেকিং প্রতিরোধ)
+                if ((index % 3 === 0 && emptyIndex === index - 1) || (index % 3 === 2 && emptyIndex === index + 1)) {
+                    return; 
+                }
+                
+                // অদল-বদল করা
+                currentOrder[emptyIndex] = currentOrder[index];
+                currentOrder[index] = "";
+                renderPuzzle();
+            }
+        }
+
+        // টাইলস এলোমেলো করা
+        function shuffleTiles() {
+            winMessage.style.display = "none";
+            for (let i = currentOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentOrder[i], currentOrder[j]] = [currentOrder[j], currentOrder[i]];
+            }
+            renderPuzzle();
+        }
+
+        // জয়ের শর্ত পরীক্ষা করা
+        function checkWin() {
+            const isWin = currentOrder.every((val, i) => val === tilesOrder[i]);
+            if (isWin && currentOrder[currentOrder.length - 1] === "") {
+                winMessage.style.display = "block";
+            }
+        }
+
+        // প্রথমবার গেম লোড করা
+        shuffleTiles();
+    </script>
+
+</body>
+</html>
